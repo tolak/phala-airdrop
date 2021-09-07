@@ -1,0 +1,22 @@
+{
+  "name": "send-aridrop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^2.5.1",
+    "axios": "^0.21.4",
+    "promise.any": "^2.0.2",
+    "web3": "^1.5.2",
+    "web3-eth-contract": "^1.5.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
