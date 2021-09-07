@@ -62,7 +62,9 @@ async function main() {
     const web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/v3/6d61e7957c1c489ea8141e947447405b'));
     const merkleAirdrop = loadMerkleAirdropContract(web3);
 
-    console.log('results:', JSON.stringify(await getAirdropLists(merkleAirdrop), null, 4));
+    let jsonStr = JSON.stringify(await getAirdropLists(merkleAirdrop), null, 4);
+    console.log('###4 writing results to file reward-plan.json...');
+    fs.writeFileSync('./reward-plan.json', jsonStr, { encoding: "utf-8" });
 }
 
 main()
