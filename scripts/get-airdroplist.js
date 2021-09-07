@@ -16,10 +16,6 @@ const IPFS_BASES = [
     'https://cloudflare-ipfs.com/ipfs',
 ];
 
-async function checkAwarded(contract, id, address) {
-    return await contract.methods.awarded(id, address).call();
-}
-
 function loadMerkleAirdropContract(web3) {
     console.log('Loading contract', merkleAirdropAddress);
     let instance = new web3.eth.Contract(JSON.parse(contractJson), merkleAirdropAddress);
@@ -85,13 +81,13 @@ async function main() {
         }
     }
 
-    let has_awarded = Promise.all(awards_history.map((history) => {
-        checkAwarded(merkleAirdrop, history.id, history.address)
+    let has_awarded = await Promise.all(awards_history.map((history) => {
+        merkleAirdrop.methods.awarded(history.id, history.address).call()
     }));
     awards_history.forEach((history, index) => {
         awards_history[index].awarded = has_awarded[index];
     });
-    fs.writeFileSync('./awards.json', jsonStr, { encoding: "utf-8" });
+    fs.writeFileSync('./awards.json', JSON.stringify(awards_history, null, 4), { encoding: "utf-8" });
 }
 
 main()
