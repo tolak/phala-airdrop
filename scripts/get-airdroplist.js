@@ -69,15 +69,23 @@ async function main() {
 
     console.log('###5 filter unaward items and write it to file award.json...');
     let awards_history = [];
+    let invalid_address = [];
     for (let plan of plans) {
         for (let award of plan.awards) {
-            awards_history.push({
+            let history = {
+                hasAwarded: true,
                 address: award.address,
                 amount: award.amount,
                 amountWei: award.amountWei,
                 id: plan.id,
-                paused: plan.paused
-            });
+                paused: plan.paused,
+            };
+            // ignore address that not valid
+            if (web3.utils.isAddress(award.address) === false) {
+                invalid_address.push(history);
+            } else {
+                awards_history.push(history);
+            }
         }
     }
 
@@ -85,9 +93,12 @@ async function main() {
         merkleAirdrop.methods.awarded(history.id, history.address).call()
     }));
     awards_history.forEach((history, index) => {
-        awards_history[index].awarded = has_awarded[index];
+        history.hasAwarded = has_awarded[index];
     });
     fs.writeFileSync('./awards.json', JSON.stringify(awards_history, null, 4), { encoding: "utf-8" });
+
+    console.log('###6 filter invalid address and write it to file invalid.json...');
+    fs.writeFileSync('./invalid.json', JSON.stringify(invalid_address, null, 4), { encoding: "utf-8" });
 }
 
 main()
