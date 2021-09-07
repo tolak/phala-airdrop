@@ -16,6 +16,10 @@ const IPFS_BASES = [
     'https://cloudflare-ipfs.com/ipfs',
 ];
 
+async function checkAwarded(contract, id, address) {
+    return await contract.methods.awarded(id, address).call();
+}
+
 function loadMerkleAirdropContract(web3) {
     console.log('Loading contract', merkleAirdropAddress);
     let instance = new web3.eth.Contract(JSON.parse(contractJson), merkleAirdropAddress);
@@ -62,9 +66,32 @@ async function main() {
     const web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/v3/6d61e7957c1c489ea8141e947447405b'));
     const merkleAirdrop = loadMerkleAirdropContract(web3);
 
-    let jsonStr = JSON.stringify(await getAirdropLists(merkleAirdrop), null, 4);
-    console.log('###4 writing results to file reward-plan.json...');
-    fs.writeFileSync('./reward-plan.json', jsonStr, { encoding: "utf-8" });
+    const plans = await getAirdropLists(merkleAirdrop);
+    let jsonStr = JSON.stringify(plans, null, 4);
+    console.log('###4 writing results to file award-plan.json...');
+    fs.writeFileSync('./award-plan.json', jsonStr, { encoding: "utf-8" });
+
+    console.log('###5 filter unaward items and write it to file award.json...');
+    let awards_history = [];
+    for (let plan of plans) {
+        for (let award of plan.awards) {
+            awards_history.push({
+                address: award.address,
+                amount: award.amount,
+                amountWei: award.amountWei,
+                id: plan.id,
+                paused: plan.paused
+            });
+        }
+    }
+
+    let has_awarded = Promise.all(awards_history.map((history) => {
+        checkAwarded(merkleAirdrop, history.id, history.address)
+    }));
+    awards_history.forEach((history, index) => {
+        awards_history[index].awarded = has_awarded[index];
+    });
+    fs.writeFileSync('./awards.json', jsonStr, { encoding: "utf-8" });
 }
 
 main()
