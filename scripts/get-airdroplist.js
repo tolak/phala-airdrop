@@ -105,7 +105,7 @@ async function main() {
             has_awarded.push(record);
         }
     }
-    console.log('records: ', has_awarded);
+
     awards_history.forEach((history, index) => {
         history.hasAwarded = has_awarded[index];
     });
