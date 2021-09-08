@@ -7,7 +7,7 @@ const fs = require('fs');
 const axios = require('axios');
 const { merkleAirdropAddress } = require('./contracts');
 // const merkleAirdropABI = require('./abi.json')
-const contractJson = fs.readFileSync('./abi.json');
+const contractJson = fs.readFileSync('./merkle-abi.json');
 
 const IPFS_BASES = [
     'https://10.via0.com/ipfs',
