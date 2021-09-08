@@ -101,7 +101,7 @@ async function main() {
             .filter(item => item.id === plan.id)
             .map((history) => checkAwarded(merkleAirdrop, history.id, history.address)));
         
-        for(let record in new_record) {
+        for (let record of new_record) {
             has_awarded.push(record);
         }
     }
