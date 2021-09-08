@@ -58,16 +58,20 @@ async function getAirdropLists(contract) {
     return plansWithStatus;
 }
 
+async function checkAwarded(contract, id, address) {
+    return await contract.methods.awarded(id, address).call();
+}
+
 async function main() {
     const web3 = new Web3(new Web3.providers.HttpProvider('https://mainnet.infura.io/v3/6d61e7957c1c489ea8141e947447405b'));
     const merkleAirdrop = loadMerkleAirdropContract(web3);
 
     const plans = await getAirdropLists(merkleAirdrop);
     let jsonStr = JSON.stringify(plans, null, 4);
-    console.log('###4 writing results to file award-plan.json...');
-    fs.writeFileSync('./award-plan.json', jsonStr, { encoding: "utf-8" });
+    console.log('### 4 writing results to file award-plan.json...');
+    fs.writeFileSync('./award-plan.json', jsonStr, { encoding: "utf-8", flag:'w' });
 
-    console.log('###5 filter unaward items and write it to file award.json...');
+    console.log('### 5 filter unaward items and write it to file award.json...');
     let awards_history = [];
     let invalid_address = [];
     for (let plan of plans) {
@@ -89,16 +93,27 @@ async function main() {
         }
     }
 
-    let has_awarded = await Promise.all(awards_history.map((history) => {
-        merkleAirdrop.methods.awarded(history.id, history.address).call()
-    }));
+    let has_awarded = [];
+    for (let plan of plans) {
+        console.log(`fetch index ${plan.id}...`);
+        let new_record = await Promise.all(
+            awards_history
+            .filter(item => item.id === plan.id)
+            .map((history) => checkAwarded(merkleAirdrop, history.id, history.address)));
+        
+        for(let record in new_record) {
+            has_awarded.push(record);
+        }
+    }
+    console.log('records: ', has_awarded);
     awards_history.forEach((history, index) => {
         history.hasAwarded = has_awarded[index];
     });
-    fs.writeFileSync('./awards.json', JSON.stringify(awards_history, null, 4), { encoding: "utf-8" });
 
-    console.log('###6 filter invalid address and write it to file invalid.json...');
-    fs.writeFileSync('./invalid.json', JSON.stringify(invalid_address, null, 4), { encoding: "utf-8" });
+    fs.writeFileSync('./awards.json', JSON.stringify(awards_history, null, 4), { encoding: "utf-8", flag:'w'});
+
+    console.log('### 6 filter invalid address and write it to file invalid.json...');
+    fs.writeFileSync('./invalid.json', JSON.stringify(invalid_address, null, 4), { encoding: "utf-8", flag:'w'});
 }
 
 main()
