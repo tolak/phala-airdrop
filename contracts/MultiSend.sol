@@ -19,7 +19,7 @@ contract MultiSend {
         }
 
         // check if user has enough balance
-        require(total <= IERC20(token).allowance(msg.sender, address(this)));
+        require(total <= IERC20(token).allowance(msg.sender, address(this)), 'Allowance is not enough');
 
         // transfer token to addresses
         for (uint8 j = 0; j < addresses.length; j++) {
