@@ -7,7 +7,7 @@
     "test": "test"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^2.5.1",
+    "@openzeppelin/contracts": "^4.3.1",
     "axios": "^0.21.4",
     "ethers": "^5.4.6",
     "promise.any": "^2.0.2",
