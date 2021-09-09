@@ -61,7 +61,7 @@ async function main() {
     console.log('arward list length: ', awardList.length);
     let chunks = _.chunk(awardList, 100);
     for (let index = 0; index < chunks.length; index++) {
-        console.log(`==> Tring to send ${index}/${chunks.length}...`);
+        console.log(`==> Trying to send ${index}/${chunks.length}...`);
         await sendAward(env, chunks[index]);
         console.log(`Chunk ${index} send done.`);
     }
