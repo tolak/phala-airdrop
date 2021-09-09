@@ -1,14 +1,20 @@
 
 // USAGE: 
-//  ENDPOINT=http://localhost:8545 KEY=<private key> GASLIMIT=10000000 GASPRICE=50000000000 INDEX=1 node distribute.js
+//  ENDPOINT=http://localhost:8545 KEY=<private key> GASLIMIT=10000000 GASPRICE=50000000000 node distribute.js
 
-const Web3 = require('web3');
+require('dotenv').config();
 const ethers = require('ethers');
 const Awards = require('./awards.json');
-const { env } = require('process');
-const contractJson = fs.readFileSync('./erc20-abi.json');
+const fs = require('fs');
+const _ = require('lodash');
 
-const PHAContractAddress = '0x00';
+const MultiSendJson = require('../build/contracts/MultiSend.json');
+const ERC20Json = require('../build/contracts/SimpleERC20.json');
+
+const BSC_PHA = '0x0112e557d400474717056c4e6d40edd846f38351';
+const BSC_MultiSend = '';
+const MultiSendAddress = BSC_MultiSend;
+const PHAAddress = BSC_PHA;
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -21,39 +27,43 @@ const waitForTx = async (provider, hash) => {
     }
 }
 
-function loadBSCPHAContract(web3) {
-    console.log('Loading contract', PHAContractAddress);
-    let instance = new web3.eth.Contract(JSON.parse(contractJson), PHAContractAddress);
-    instance.options.address = PHAContractAddress;
-    return instance;
-}
+async function sendAward(env, chunk) {
+    let address = chunk.map(obj => obj.address);
+    let amounts = chunk.map(obj => obj.amount);
 
-async function sendAward(env, to, amount) {
-    const tx = await env.PHA.transfer(to, amount);
+    const tx = await env.MultiSend.multi_send_token(PHAAddress, address, amounts);
     await waitForTx(env.provider, tx.hash);
 }
 
 async function main() {
 
     let env = {};
-    env.url = process.env.ENDPOINT || 'https://mainnet.infura.io/v3/6d61e7957c1c489ea8141e947447405b';
+    env.url = process.env.ENDPOINT || 'http://localhost:8545';
     env.privateKey = process.env.KEY;
     env.provider = new ethers.providers.JsonRpcProvider(env.url);
     env.wallet = new ethers.Wallet(env.privateKey, env.provider);
     env.gasLimit = ethers.utils.hexlify(Number(process.env.GASLIMIT));
     env.gasPrice = ethers.utils.hexlify(Number(process.env.GASPRICE));
 
-    let index = Number(process.env.INDEX);
-    console.log(`==> Ready to send awards of plan #${index}`);
+    env.MultiSend = new ethers.Contract(MultiSendAddress, MultiSendJson.abi, env.wallet);
+    env.PHA = new ethers.Contract(PHAAddress, ERC20Json.abi, env.wallet);
 
-    env.PHA = new ethers.Contract(PHAContractAddress, JSON.parse(contractJson), env.wallet);
+    console.log('Approve MultiSend contract...');
+    await env.PHA.approve(MultiSendAddress, ethers.constants.MaxUint256);
 
-    let awardList = Awards.filter(award => award.id === index);
-    console.log(`there are ${awardList.length()} users to reward...`);
-    for (let user of awardList) {
-        console.log(`Tring to send ${user.amountWei} PHA to ${user.address}}`);
-        sendAward(user.address, user.amountWei);
-        console.log(`Send done.`)
+    let awardList = Awards.filter(award => award.hasAwarded === false).map(award => {
+        return {
+            address: award.address,
+            amount: award.amountWei
+        };
+    });
+
+    console.log('arward list length: ', awardList.length);
+    let chunks = _.chunk(awardList, 100);
+    for (let index = 0; index < chunks.length; index++) {
+        console.log(`==> Tring to send ${index}/${chunks.length}...`);
+        await sendAward(env, chunks[index]);
+        console.log(`Chunk ${index} send done.`);
     }
 }
 
