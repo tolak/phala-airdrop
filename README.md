@@ -14,6 +14,8 @@ truffle compile
 
 ## Deploy MultiSend contract
 
+**MultiSend already deployed on BSC mainnet: 0xf5a675C9A69Ea683D135F5d49da0D5a5a90F8ec9**
+
 uncomment ```await deployERC20(env);``` in main() if you want to deploy a test ERC20 token.
 
 ```sh
